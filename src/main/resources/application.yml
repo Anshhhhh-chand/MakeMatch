@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: game-match-service
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:gamematch_db}
+    username: ${DB_USER:gamematch}
+    password: ${DB_PASSWORD:gamematch_secret}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+  mvc:
+    problemdetails:
+      enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+
+gamematch:
+  matchmaking:
+    rating-tolerance: 150
+    default-team-size: 1
+    evaluation-interval-ms: 2000
+  session:
+    heartbeat-timeout-seconds: 15
+    heartbeat-check-interval-seconds: 5
