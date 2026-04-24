@@ -1,0 +1,161 @@
+### ================================================================
+### Game Match Service API Requests
+### ================================================================
+
+@base = http://localhost:8080/api/v1
+@actuator = http://localhost:8080/actuator
+
+### ---------------------------------------------------------------- Observability & Health
+
+### 1. Actuator Health
+GET {{actuator}}/health
+
+### 2. Matchmaking Queue Size Metric
+GET {{actuator}}/metrics/gamematch.queue.size
+
+### 3. Matchmaking Attempts Metric
+GET {{actuator}}/metrics/gamematch.matchmaking.attempts
+
+### 4. Successful Matches Metric
+GET {{actuator}}/metrics/gamematch.matches.success
+
+### 5. Active Sessions Metric
+GET {{actuator}}/metrics/gamematch.sessions.active
+
+### ---------------------------------------------------------------- Player Management
+
+### 6. Create Player 1
+# @name createPlayer1
+POST {{base}}/players
+Content-Type: application/json
+
+{
+  "displayName": "Vanguard-{{$randomInt 1000 9999}}",
+  "region": "NA",
+  "skillRating": 1200,
+  "preferredMode": "RANKED_1V1"
+}
+
+###
+@player1Id = {{createPlayer1.response.body.$.id}}
+
+### 7. Create Player 2
+# @name createPlayer2
+POST {{base}}/players
+Content-Type: application/json
+
+{
+  "displayName": "Striker-{{$randomInt 1000 9999}}",
+  "region": "NA",
+  "skillRating": 1240,
+  "preferredMode": "RANKED_1V1"
+}
+
+###
+@player2Id = {{createPlayer2.response.body.$.id}}
+
+### 8. Get Player 1 Profile
+GET {{base}}/players/{{player1Id}}
+
+### ---------------------------------------------------------------- Matchmaking Queue
+
+### 9. Player 1 Joins Matchmaking Queue
+# @name joinQueueP1
+POST {{base}}/queue/join
+Content-Type: application/json
+
+{
+  "playerId": {{player1Id}},
+  "region": "NA",
+  "mode": "RANKED_1V1"
+}
+
+### 10. Player 2 Joins Matchmaking Queue
+# @name joinQueueP2
+POST {{base}}/queue/join
+Content-Type: application/json
+
+{
+  "playerId": {{player2Id}},
+  "region": "NA",
+  "mode": "RANKED_1V1"
+}
+
+### 11. Check Queue Status for Player 1
+GET {{base}}/queue/status/{{player1Id}}
+
+### 12. Check Queue Sizes
+GET {{base}}/queue/size?region=NA&mode=RANKED_1V1
+
+### 13. Player 1 Leaves Queue (Optional)
+POST {{base}}/queue/leave
+Content-Type: application/json
+
+{
+  "playerId": {{player1Id}}
+}
+
+### ---------------------------------------------------------------- Matches & Game Sessions
+
+### 14. Get Match Details (replace ID with created match ID)
+GET {{base}}/matches/1
+
+### 15. Get Game Session Details (replace ID with created session ID)
+GET {{base}}/sessions/1
+
+### 16. Player 1 Ready Up
+POST {{base}}/sessions/1/ready
+Content-Type: application/json
+
+{
+  "playerId": {{player1Id}}
+}
+
+### 17. Player 2 Ready Up (Transitions Session & Match to ACTIVE)
+POST {{base}}/sessions/1/ready
+Content-Type: application/json
+
+{
+  "playerId": {{player2Id}}
+}
+
+### 18. Player 1 Heartbeat
+POST {{base}}/sessions/1/heartbeat
+Content-Type: application/json
+
+{
+  "playerId": {{player1Id}}
+}
+
+### 19. Complete Game Session (Winner: Player 1)
+POST {{base}}/sessions/1/complete
+Content-Type: application/json
+
+{
+  "winnerPlayerId": {{player1Id}}
+}
+
+### 20. Get Player 1 Match History
+GET {{base}}/sessions/history/{{player1Id}}
+
+### 21. Cancel Game Session (Alternative)
+POST {{base}}/sessions/1/cancel
+Content-Type: application/json
+
+{
+  "reason": "Player disconnected during gameplay"
+}
+
+### ---------------------------------------------------------------- Error Examples
+
+### 22. 404 Not Found Example
+GET {{base}}/players/999999
+
+### 23. 400 Validation Error Example
+POST {{base}}/players
+Content-Type: application/json
+
+{
+  "displayName": "",
+  "region": null
+}
